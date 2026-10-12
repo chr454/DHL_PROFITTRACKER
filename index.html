@@ -1,0 +1,1248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DHL Office Profit Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF0F3; --surface:#FFFFFF; --ink:#16222E; --muted:#5A6A79; --line:#D6DDE4; --field:#F6F8FA;
+  --accent:#FFC400; --accent-ink:#16222E; --primary:#16222E; --primary-ink:#FFFFFF;
+  --good:#17734A; --good-bg:#E1F3E9; --bad:#B42318; --bad-bg:#FDE8E6; --warn:#7A5A00; --warn-bg:#FFF1C2; --info:#1D4E89; --info-bg:#E3EDFA;
+  --paper:#FFFFFF; --shadow:0 1px 2px rgba(22,34,46,.06);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1720; --surface:#17212C; --ink:#E8EDF2; --muted:#9AA9B8; --line:#2A3846; --field:#1C2733;
+    --accent:#FFC400; --accent-ink:#16222E; --primary:#FFC400; --primary-ink:#16222E;
+    --good:#5BD69B; --good-bg:#14352A; --bad:#FF8A80; --bad-bg:#3B1B19; --warn:#FFD66B; --warn-bg:#3A2F10; --info:#8DB8F0; --info-bg:#182B45;
+    --paper:#1C2733; --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1720; --surface:#17212C; --ink:#E8EDF2; --muted:#9AA9B8; --line:#2A3846; --field:#1C2733;
+  --accent:#FFC400; --accent-ink:#16222E; --primary:#FFC400; --primary-ink:#16222E;
+  --good:#5BD69B; --good-bg:#14352A; --bad:#FF8A80; --bad-bg:#3B1B19; --warn:#FFD66B; --warn-bg:#3A2F10; --info:#8DB8F0; --info-bg:#182B45;
+  --paper:#1C2733; --shadow:none;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
+body.noscroll{overflow:hidden}
+h1,h2,h3,p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:1040px;margin:0 auto;padding:16px 16px 72px}
+
+/* header */
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0 16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{width:34px;height:34px;border-radius:8px;background:var(--accent);position:relative;flex:none}
+.mark::after{content:"";position:absolute;left:7px;right:7px;top:11px;height:4px;background:var(--accent-ink);box-shadow:0 8px 0 var(--accent-ink);border-radius:2px}
+.brand h1{font-size:19px;font-weight:800;letter-spacing:-.01em;line-height:1.15}
+.brand p{font-size:13px;color:var(--muted)}
+.who{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.role{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 10px;font-weight:600;color:var(--ink)}
+.role.admin{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+/* tabs */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.tabs button{background:none;border:0;padding:10px 14px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button:hover{color:var(--ink)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 14px;font-weight:600;cursor:pointer;min-height:40px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.btn.primary:hover{opacity:.9}
+.btn.accent{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.danger{background:#B42318;color:#fff;border-color:#B42318}
+.btn.ghost{background:transparent}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.link{background:none;border:0;padding:4px 6px;color:var(--info);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.link.danger{color:var(--bad)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* date bar + status */
+.datebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.datebar input[type=date]{min-height:40px}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.pill.good{background:var(--good-bg);color:var(--good)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.info{background:var(--info-bg);color:var(--info)}
+.pill.mute{background:var(--field);color:var(--muted);border:1px solid var(--line)}
+.note{border-radius:10px;padding:10px 14px;margin-bottom:14px;background:var(--surface);border:1px solid var(--line)}
+.note.good{background:var(--good-bg);border-color:transparent}
+.note.bad{background:var(--bad-bg);border-color:transparent}
+.note.warn{background:var(--warn-bg);border-color:transparent}
+.note.info{background:var(--info-bg);border-color:transparent}
+
+/* actions */
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.actions .spacer{flex:1}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:2px}
+.card .k{font-size:13px;color:var(--muted);font-weight:600}
+.card .v{font-size:26px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.2}
+.card .s{font-size:12.5px;color:var(--muted)}
+.card.net{border-left:6px solid var(--accent)}
+.neg{color:var(--bad)}
+
+/* panels / tables */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:16px;box-shadow:var(--shadow)}
+.panel>h2{font-size:15px;font-weight:700;padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.panel .pb{padding:12px 16px}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:13px;padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.act{text-align:right;white-space:nowrap}
+tfoot td{font-weight:700;border-top:2px solid var(--line)}
+.sub{font-size:12.5px;color:var(--muted)}
+.track{font-variant-numeric:tabular-nums;letter-spacing:.03em;font-weight:600}
+.muted{color:var(--muted)}
+.dim td.num{color:var(--muted)}
+.empty{padding:20px 16px;color:var(--muted)}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* forms */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fld{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;min-width:0}
+.fld>span{font-size:13px;font-weight:600}
+.fld small{color:var(--muted);font-size:12.5px}
+input[type=text],input[type=date],input[type=time],select,textarea{width:100%;border:1px solid var(--line);background:var(--field);border-radius:8px;padding:9px 10px;min-height:40px}
+textarea{resize:vertical}
+.money{display:flex;align-items:stretch}
+.money b{display:flex;align-items:center;padding:0 10px;border:1px solid var(--line);border-right:0;border-radius:8px 0 0 8px;background:var(--surface);color:var(--muted)}
+.money input{border-radius:0 8px 8px 0}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.seg label{flex:1;text-align:center;cursor:pointer}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;padding:10px 6px;font-weight:600;font-size:14px;background:var(--surface);border-right:1px solid var(--line)}
+.seg label:last-child span{border-right:0}
+.seg input:checked+span{background:var(--primary);color:var(--primary-ink)}
+.seg input:focus-visible+span{outline:3px solid var(--accent);outline-offset:-3px}
+.err{color:var(--bad);font-weight:600;margin:4px 0 10px}
+.checks{display:flex;gap:12px;flex-wrap:wrap}
+.checks label{display:flex;gap:6px;align-items:center}
+
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(10,18,26,.55);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:max(16px,env(safe-area-inset-top,0px)) 12px max(16px,env(safe-area-inset-bottom,0px));z-index:50}
+.sheet{background:var(--surface);border-radius:14px;width:100%;max-width:520px;margin:auto 0;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.sheet.wide{max-width:900px}
+.sheet-h{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.sheet-h h2{font-size:17px}
+.sheet-b{padding:16px 18px}
+.sheet-f{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
+.icon{background:none;border:0;font-size:24px;line-height:1;cursor:pointer;color:var(--muted);padding:2px 8px}
+.shipgrid{display:grid;grid-template-columns:1fr 330px;gap:22px;align-items:start}
+
+/* the working receipt */
+.receipt{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:6px 6px 0 0;margin-bottom:14px;position:sticky;top:12px}
+.receipt::after{content:"";position:absolute;left:-1px;right:-1px;bottom:-9px;height:9px;background:radial-gradient(circle at 7px 0,transparent 6px,var(--paper) 6.5px) repeat-x;background-size:14px 9px;filter:drop-shadow(0 1px 0 var(--line))}
+.rc-h{background:var(--accent);color:var(--accent-ink);padding:10px 14px;border-radius:5px 5px 0 0}
+.rc-h b{display:block;font-size:15px}
+.rc-h span{font-size:12.5px;font-variant-numeric:tabular-nums;letter-spacing:.03em}
+.rc-b{padding:12px 14px 18px}
+.rc-l{display:flex;align-items:baseline;gap:6px;padding:4px 0;font-variant-numeric:tabular-nums}
+.rc-l i{flex:1;border-bottom:1px dotted var(--muted);transform:translateY(-3px);opacity:.6}
+.rc-l.sep{border-top:1px dashed var(--muted);margin-top:6px;padding-top:8px}
+.rc-l.total{font-size:20px;font-weight:800;margin-top:6px;border-top:2px solid var(--ink);padding-top:10px}
+.rc-l.total.neg{color:var(--bad)}
+.rc-hint{color:var(--muted);padding:6px 0}
+
+/* toast */
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:80;max-width:90vw}
+.gate{max-width:520px;margin:12vh auto;padding:0 20px;text-align:center}
+.gate h1{font-size:20px;margin-bottom:8px}
+.gate p{color:var(--muted)}
+.tests li{margin:2px 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--field);border-radius:999px;padding:3px 6px 3px 12px}
+.chip button{border:0;background:none;cursor:pointer;color:var(--muted);font-size:16px;line-height:1;padding:0 4px}
+.addrow{display:flex;gap:8px}
+
+@media (max-width:760px){
+  .cards{grid-template-columns:1fr}
+  .cols2,.grid2{grid-template-columns:1fr}
+  .shipgrid{grid-template-columns:1fr}
+  .receipt{position:relative;top:0}
+  .card .v{font-size:24px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .btn,.tabs button{transition:background-color .12s,border-color .12s}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="view"></div>
+<div id="modal" hidden></div>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<noscript><div class="gate"><h1>JavaScript is required</h1><p>Turn on JavaScript to use the profit tracker.</p></div></noscript>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* =====================================================================
+   CALCULATION ENGINE  (pure functions, no UI, no storage)
+   ===================================================================== */
+// ENGINE_START
+const Engine = (function(){
+  const r2 = n => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+  const sum = arr => arr.reduce((a, n) => r2(a + (Number(n) || 0)), 0);
+
+  // Account 1: business earns a % of every transaction
+  function account1(amount, ratePct){
+    const a = r2(amount);
+    const commission = r2(a * ratePct / 100);
+    return { transactionAmount: a, commissionPct: ratePct, commission, customerCharge: null, profit: commission };
+  }
+  // Independent account: DHL base rate, business sets customer charge
+  function independent(baseRate, customerCharge){
+    const b = r2(baseRate), c = r2(customerCharge);
+    return { baseRate: b, customerCharge: c, profit: r2(c - b) };
+  }
+  // Economy rate: fuel VAT on base, margin on (base + fuel VAT)
+  function economy(baseRate, vatPct, marginPct){
+    const b = r2(baseRate);
+    const fuelVat = r2(b * vatPct / 100);
+    const subtotal = r2(b + fuelVat);
+    const margin = r2(subtotal * marginPct / 100);
+    const customerCharge = r2(subtotal + margin);
+    return { baseRate: b, vatPct, fuelVat, subtotal, marginPct, margin, customerCharge, profit: margin };
+  }
+  function dailyTotal(rows){
+    const byType = { account1:{count:0,profit:0}, independent:{count:0,profit:0}, economy:{count:0,profit:0} };
+    let total = 0;
+    rows.forEach(s => {
+      const b = byType[s.accountType]; if(!b) return;
+      b.count++; b.profit = r2(b.profit + s.profit); total = r2(total + s.profit);
+    });
+    return { byType, total, count: rows.length };
+  }
+  function selfTest(){
+    const t = [];
+    const eq = (name, got, want) => t.push({ name, pass: got === want, got, want });
+    const a = account1(100000, 12.5);              eq('Account 1: ₦100,000 at 12.5% = ₦12,500', a.commission, 12500);
+    const i = independent(20000, 25000);           eq('Independent: ₦25,000 − ₦20,000 = ₦5,000', i.profit, 5000);
+    const e = economy(20000, 7.5, 30);
+    eq('Economy 30%: fuel VAT ₦1,500', e.fuelVat, 1500);
+    eq('Economy 30%: subtotal ₦21,500', e.subtotal, 21500);
+    eq('Economy 30%: margin ₦6,450', e.margin, 6450);
+    eq('Economy 30%: customer charge ₦27,950', e.customerCharge, 27950);
+    eq('Economy 30%: profit equals margin', e.profit, 6450);
+    const e20 = economy(20000, 7.5, 20);           eq('Economy 20%: margin ₦4,300, charge ₦25,800', e20.margin + '/' + e20.customerCharge, '4300/25800');
+    const e25 = economy(20000, 7.5, 25);           eq('Economy 25%: margin ₦5,375, charge ₦26,875', e25.margin + '/' + e25.customerCharge, '5375/26875');
+    const ev = economy(20000, 5, 30);              eq('Economy with VAT changed to 5%: charge ₦27,300', ev.customerCharge, 27300);
+    const odd = economy(12345.67, 7.5, 30);        eq('Economy rounding: charge = subtotal + margin', r2(odd.subtotal + odd.margin), odd.customerCharge);
+    const d = dailyTotal([{accountType:'account1',profit:12500},{accountType:'independent',profit:5000},{accountType:'economy',profit:6450}]);
+    eq('Daily total adds all account types', d.total, 23950);
+    return t;
+  }
+  return { r2, sum, account1, independent, economy, dailyTotal, selfTest };
+})();
+// ENGINE_END
+
+/* =====================================================================
+   HELPERS
+   ===================================================================== */
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => { n = Number(n) || 0; return (n < 0 ? '−' : '') + '₦' + Math.abs(n).toLocaleString('en-NG', {minimumFractionDigits:0, maximumFractionDigits:2}); };
+const num = v => { const s = String(v == null ? '' : v).replace(/[,\s₦]/g, ''); return s === '' ? NaN : Number(s); };
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const parse = s => { const p = s.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); };
+const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate() + n); return ymd(d); };
+const businessTimeZone = () => (window.APP_CONFIG && window.APP_CONFIG.businessTimeZone) || 'Africa/Lagos';
+const today = () => { const p = new Intl.DateTimeFormat('en-GB',{timeZone:businessTimeZone(),year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()); const v = Object.fromEntries(p.map(x => [x.type,x.value])); return v.year + '-' + v.month + '-' + v.day; };
+const fmtDate = s => parse(s).toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+const fmtShort = s => parse(s).toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'});
+const fmtStamp = ms => ms ? new Date(ms).toLocaleString('en-GB', {day:'numeric', month:'short', hour:'numeric', minute:'2-digit', hour12:true}) : '—';
+const newId = p => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const pct = n => (Math.round(n * 100) / 100) + '%';
+
+const TYPE_LABEL = { account1:'Account 1', independent:'Independent', economy:'Economy Rate' };
+const TYPE_ORDER = ['account1','independent','economy'];
+const DEFAULTS = { businessName:'DHL Office', account1Pct:12.5, fuelVatPct:7.5, defaultMarginPct:30, marginOptions:[20,25,30], cutoff:'20:00', workDays:[1,2,3,4,5,6] };
+const DEFAULT_CATS = ['Transportation','Fuel','Electricity / Power','Internet / Data','Office supplies','Repairs and maintenance','Staff-related expenses','Rent / Office costs','Delivery-related expenses','Partner-related expenses','Bank / Transaction charges','Miscellaneous','Other'];
+const PAY_METHODS = ['Cash','Bank transfer','POS','Other'];
+const STATUS = { submitted:['Submitted','good'], draft:['Draft','info'], notstarted:['Not started','mute'], reopened:['Reopened','warn'], missing:['Missing','bad'] };
+
+const state = {
+  ready:false, fatal:null, error:null, db:null, user:null, downloads:null, orgId:null,
+  me:{id:null, name:''}, isAdmin:false, canWrite:false,
+  rates:Object.assign({}, DEFAULTS), categories:DEFAULT_CATS.slice(),
+  shipments:[], expenses:[], reports:{}, audit:[], names:{}, loaded:{},
+  tab:'day', date:today(), range:{preset:'month', from:'', to:''}, catDraft:null
+};
+
+/* =====================================================================
+   DATA SELECTORS
+   ===================================================================== */
+const byCreated = (a, b) => (a.createdAt || 0) - (b.createdAt || 0);
+const liveShips = d => state.shipments.filter(s => !s.deleted && s.date === d).sort(byCreated);
+const liveExps = d => state.expenses.filter(e => !e.deleted && e.date === d).sort(byCreated);
+
+function dayTotals(d){
+  const ships = liveShips(d), exps = liveExps(d);
+  const t = Engine.dailyTotal(ships);
+  const expenses = Engine.sum(exps.map(e => e.amount));
+  return { ships, exps, byType:t.byType, profit:t.total, expenses, net:Engine.r2(t.total - expenses),
+           count:ships.length, pending:ships.filter(s => s.paymentStatus !== 'paid').length };
+}
+const isWorkDay = d => (state.rates.workDays || []).indexOf(parse(d).getDay()) > -1;
+function overdue(d){
+  const t = today(); if(d > t) return false; if(d < t) return true;
+  const c = String(state.rates.cutoff || '20:00').split(':').map(Number);
+  const p = new Intl.DateTimeFormat('en-GB',{timeZone:businessTimeZone(),hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date()); const v = Object.fromEntries(p.map(x => [x.type,x.value])); return Number(v.hour) * 60 + Number(v.minute) >= c[0] * 60 + (c[1] || 0);
+}
+function statusOf(d){
+  const r = state.reports[d]; if(r && r.status) return r.status;
+  return (liveShips(d).length || liveExps(d).length) ? 'draft' : 'notstarted';
+}
+function displayStatus(d){
+  const s = statusOf(d);
+  if(s === 'submitted' || s === 'reopened') return s;
+  if(overdue(d) && (isWorkDay(d) || s !== 'notstarted')) return 'missing';
+  return s;
+}
+const isLocked = d => (state.reports[d] || {}).status === 'submitted';
+const statusPill = k => '<span class="pill ' + STATUS[k][1] + '">' + STATUS[k][0] + '</span>';
+
+function nameOf(id){
+  if(!id) return '—';
+  if(id === state.me.id) return state.me.name || 'You';
+  return state.names[id] || 'Staff member';
+}
+async function ensureNames(ids){
+  ids = Array.from(new Set(ids.filter(Boolean))).filter(i => !(i in state.names));
+  if(!ids.length || !state.user) return false;
+  try{ const ps = await state.user.profiles(ids); ids.forEach(i => { state.names[i] = (ps[i] && ps[i].name) || ''; }); }
+  catch(e){ ids.forEach(i => { state.names[i] = ''; }); }
+  return true;
+}
+function collectIds(){
+  const ids = [];
+  state.shipments.forEach(s => ids.push(s.createdBy, s.updatedBy, s.deletedBy));
+  state.expenses.forEach(e => ids.push(e.recordedBy, e.updatedBy, e.deletedBy));
+  Object.keys(state.reports).forEach(k => { const r = state.reports[k]; ids.push(r.submittedBy, r.reopenedBy); });
+  state.audit.forEach(a => ids.push(a.by));
+  return ids;
+}
+
+/* =====================================================================
+   RENDER SCHEDULING
+   ===================================================================== */
+let renderQueued = false, renderPending = false;
+function scheduleRender(){
+  if(renderQueued) return; renderQueued = true;
+  requestAnimationFrame(() => {
+    renderQueued = false;
+    const a = document.activeElement, v = $('#view');
+    if(a && v && v.contains(a) && /INPUT|SELECT|TEXTAREA/.test(a.tagName)){ renderPending = true; return; }
+    render();
+  });
+}
+document.addEventListener('focusout', () => { if(renderPending) setTimeout(() => { const a = document.activeElement; if(!(a && /INPUT|SELECT|TEXTAREA/.test(a.tagName))){ renderPending = false; render(); } }, 150); });
+
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, 3800);
+}
+function writeFail(e){
+  console.error(e);
+  const c = e && e.code;
+  if(c === 'invalid_argument') toast("You don't have permission to save changes here.");
+  else if(c === 'quota_exceeded') toast('Storage is full. Tell the admin.');
+  else toast('Could not save. Check your connection and try again.');
+}
+function canAct(){
+  if(!state.canWrite){ toast('You have view-only access.'); return false; }
+  return true;
+}
+async function audit(){ /* Audit events are written atomically by Supabase RPCs; never trust client-supplied actor IDs. */ }
+
+/* =====================================================================
+   MODALS
+   ===================================================================== */
+let modalCancel = null;
+function openModal(html, opts){
+  opts = opts || {};
+  const m = $('#modal');
+  m.innerHTML = '<div class="scrim"><div class="sheet' + (opts.wide ? ' wide' : '') + '" role="dialog" aria-modal="true">' + html + '</div></div>';
+  m.hidden = false; document.body.classList.add('noscroll');
+  modalCancel = opts.onCancel || null;
+  if(opts.onMount) opts.onMount(m);
+  const f = $('input:not([type=radio]):not([type=hidden]),select,textarea,button.primary', m); if(f) f.focus();
+}
+function closeModal(){
+  const c = modalCancel; modalCancel = null;
+  const m = $('#modal'); m.onclick = null; m.innerHTML = ''; m.hidden = true; document.body.classList.remove('noscroll');
+  if(c) c();
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && !$('#modal').hidden) closeModal(); });
+
+function confirmModal(o){
+  return new Promise(res => {
+    const html = '<div class="sheet-h"><h2>' + esc(o.title) + '</h2></div><div class="sheet-b">' + (o.body || '') +
+      (o.reason ? '<label class="fld"><span>' + esc(o.reason.label) + '</span><textarea id="cmReason" rows="2"></textarea></label><p class="err" id="cmErr" hidden></p>' : '') +
+      '</div><div class="sheet-f"><button class="btn" data-cm="no">Cancel</button><button class="btn ' + (o.danger ? 'danger' : 'primary') + '" data-cm="yes">' + esc(o.confirmText || 'Confirm') + '</button></div>';
+    openModal(html, { onCancel:() => res({ok:false}), onMount:m => {
+      m.onclick = e => {
+        const b = e.target.closest('[data-cm]'); if(!b) return;
+        if(b.dataset.cm === 'no'){ closeModal(); return; }
+        let reason = '';
+        if(o.reason){
+          reason = $('#cmReason').value.trim();
+          if(o.reason.required && !reason){ const er = $('#cmErr'); er.textContent = 'Please give a reason.'; er.hidden = false; return; }
+        }
+        modalCancel = null; closeModal(); res({ok:true, reason});
+      };
+    }});
+  });
+}
+
+/* =====================================================================
+   SHIPMENT FORM
+   ===================================================================== */
+const fld = (label, inner, hint) => '<label class="fld"><span>' + label + '</span>' + inner + (hint ? '<small>' + hint + '</small>' : '') + '</label>';
+const moneyIn = (name, val) => '<div class="money"><b>₦</b><input type="text" name="' + name + '" inputmode="decimal" autocomplete="off" placeholder="0.00" value="' + esc(val == null ? '' : val) + '"></div>';
+
+function openShipmentForm(ex){
+  if(!canAct()) return;
+  const R = state.rates, v = ex || {};
+  const type = v.accountType || 'account1';
+  const commissionPct = v.commissionPct != null ? v.commissionPct : R.account1Pct;
+  const vatPct = v.vatPct != null ? v.vatPct : R.fuelVatPct;
+  const marginPct = v.marginPct != null ? v.marginPct : R.defaultMarginPct;
+  const inList = R.marginOptions.indexOf(marginPct) > -1;
+  const marginOpts = R.marginOptions.map(m => '<option value="' + m + '"' + (inList && m === marginPct ? ' selected' : '') + '>' + m + '%</option>').join('') +
+    '<option value="custom"' + (!inList ? ' selected' : '') + '>Custom…</option>';
+  const date = v.date || (state.date > today() ? today() : state.date);
+
+  const html =
+  '<form id="shipForm" novalidate>' +
+  '<div class="sheet-h"><h2>' + (ex ? 'Edit shipment' : 'New shipment') + '</h2><button type="button" class="icon" data-action="close-modal" aria-label="Close">×</button></div>' +
+  '<div class="sheet-b"><div class="shipgrid"><div>' +
+    '<div class="seg" role="radiogroup" aria-label="Account type">' +
+      TYPE_ORDER.map(k => '<label><input type="radio" name="accountType" value="' + k + '"' + (k === type ? ' checked' : '') + '><span>' + TYPE_LABEL[k] + '</span></label>').join('') +
+    '</div>' +
+    '<div class="grid2">' +
+      fld('Date', '<input type="date" name="date" value="' + esc(date) + '" max="' + today() + '">') +
+      fld('Tracking ID', '<input type="text" name="trackingId" autocomplete="off" value="' + esc(v.trackingId) + '">') +
+    '</div>' +
+    '<div class="grid2">' +
+      fld('Sender name', '<input type="text" name="sender" autocomplete="off" value="' + esc(v.sender) + '">') +
+      fld('Delivery location', '<input type="text" name="location" autocomplete="off" value="' + esc(v.location) + '">') +
+    '</div>' +
+    '<div data-for="account1">' +
+      fld('Transaction amount', moneyIn('amount', v.transactionAmount), 'Commission rate for this account: ' + pct(commissionPct) + ' (set by admin)') +
+    '</div>' +
+    '<div data-for="independent"><div class="grid2">' +
+      fld('DHL base rate', moneyIn('indBase', type === 'independent' ? v.baseRate : '')) +
+      fld('Customer charge', moneyIn('indCharge', type === 'independent' ? v.customerCharge : '')) +
+    '</div></div>' +
+    '<div data-for="economy"><div class="grid2">' +
+      fld('DHL base rate', moneyIn('ecoBase', type === 'economy' ? v.baseRate : ''), 'Fuel VAT of ' + pct(vatPct) + ' is added automatically') +
+      fld('Business margin', '<select name="marginSel">' + marginOpts + '</select><input type="text" name="marginCustom" inputmode="decimal" placeholder="Margin %" style="margin-top:6px" value="' + (!inList ? esc(marginPct) : '') + '"' + (inList ? ' hidden' : '') + '>', 'Applied to base rate plus fuel VAT') +
+    '</div></div>' +
+    '<div class="grid2">' +
+      fld('Payment status', '<select name="payStatus"><option value="paid"' + ((v.paymentStatus || 'paid') === 'paid' ? ' selected' : '') + '>Paid</option><option value="pending"' + (v.paymentStatus === 'pending' ? ' selected' : '') + '>Pending</option><option value="partial"' + (v.paymentStatus === 'partial' ? ' selected' : '') + '>Partially paid</option></select>') +
+      '<div data-for-pay="partial">' + fld('Amount received so far', moneyIn('amountPaid', v.paymentStatus === 'partial' ? v.amountPaid : '')) + '</div>' +
+    '</div>' +
+    fld('Notes (optional)', '<textarea name="notes" rows="2">' + esc(v.notes) + '</textarea>') +
+    '<div id="dupBox" hidden><div class="note warn"><strong>This tracking ID is already recorded.</strong> <span id="dupInfo"></span>' +
+      '<label class="checks" style="margin-top:8px"><span style="display:flex;gap:6px;align-items:center"><input type="checkbox" name="dupOk"> This is a legitimate repeat</span></label>' +
+      '<label class="fld" style="margin:8px 0 0"><span>Reason</span><input type="text" name="dupReason" value="' + esc(v.duplicateReason) + '"></label></div></div>' +
+    '<p class="err" id="shipErr" hidden></p>' +
+  '</div>' +
+  '<aside><div class="receipt" aria-live="polite"><div class="rc-h"><b>Breakdown</b><span id="rcTrack">No tracking ID yet</span></div><div class="rc-b" id="rcBody"></div></div></aside>' +
+  '</div></div>' +
+  '<div class="sheet-f"><button type="button" class="btn" data-action="close-modal">Cancel</button><button type="submit" class="btn primary" id="shipSave">' + (ex ? 'Save changes' : 'Save shipment') + '</button></div>' +
+  '</form>';
+
+  openModal(html, { wide:true, onMount:() => wireShipmentForm(ex, { commissionPct, vatPct }) });
+}
+
+function wireShipmentForm(ex, fixed){
+  const form = $('#shipForm');
+  const val = n => form.elements[n] ? form.elements[n].value : '';
+  const typeNow = () => form.elements.accountType.value;
+  const marginNow = () => {
+    const raw = val('marginSel') === 'custom' ? val('marginCustom') : val('marginSel');
+    const m = num(raw); return (isFinite(m) && m >= 0 && m <= 100) ? m : null;
+  };
+  function calc(){
+    const t = typeNow();
+    if(t === 'account1'){ const a = num(val('amount')); return a > 0 ? Engine.account1(a, fixed.commissionPct) : null; }
+    if(t === 'independent'){ const b = num(val('indBase')), c = num(val('indCharge')); return (b > 0 && c > 0) ? Engine.independent(b, c) : null; }
+    const b = num(val('ecoBase')), m = marginNow(); return (b > 0 && m != null) ? Engine.economy(b, fixed.vatPct, m) : null;
+  }
+  const line = (l, v, cls) => '<div class="rc-l ' + (cls || '') + '"><span>' + l + '</span><i></i><span>' + v + '</span></div>';
+  function paint(){
+    const t = typeNow();
+    $$('[data-for]', form).forEach(el => { el.hidden = el.dataset.for !== t; });
+    $$('[data-for-pay]', form).forEach(el => { el.hidden = val('payStatus') !== 'partial'; });
+    form.elements.marginCustom.hidden = val('marginSel') !== 'custom';
+    const trk = val('trackingId').trim();
+    $('#rcTrack').textContent = trk ? trk.toUpperCase() : 'No tracking ID yet';
+    const c = calc(), body = $('#rcBody');
+    if(!c){ body.innerHTML = '<p class="rc-hint">Enter the amounts and the breakdown appears here as you type.</p>'; return; }
+    let h = '';
+    if(t === 'account1'){
+      h = line('Transaction amount', fmt(c.transactionAmount)) + line('Commission rate', pct(c.commissionPct)) + line('Your commission', fmt(c.profit), 'total');
+    } else if(t === 'independent'){
+      h = line('DHL base rate', fmt(c.baseRate)) + line('Customer charge', fmt(c.customerCharge)) + line('Your profit', fmt(c.profit), 'total' + (c.profit < 0 ? ' neg' : ''));
+      if(c.profit < 0) h += '<p class="err">Customer charge is below the base rate. This shipment makes a loss.</p>';
+    } else {
+      h = line('DHL base rate', fmt(c.baseRate)) + line('Fuel VAT (' + pct(c.vatPct) + ')', fmt(c.fuelVat)) + line('Subtotal', fmt(c.subtotal), 'sep') +
+          line('Margin (' + pct(c.marginPct) + ' of subtotal)', fmt(c.margin)) + line('Charge the customer', fmt(c.customerCharge), 'sep') + line('Your profit', fmt(c.profit), 'total');
+    }
+    body.innerHTML = h;
+  }
+  form.addEventListener('input', paint);
+  form.addEventListener('change', paint);
+  paint();
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const err = $('#shipErr'); err.hidden = true;
+    const t = typeNow(), date = val('date'), sender = val('sender').trim(), loc = val('location').trim();
+    const tracking = val('trackingId').trim().toUpperCase().replace(/\s+/g, '');
+    const errors = [];
+    if(!date) errors.push('Choose the date.');
+    else if(date > today()) errors.push('The date cannot be in the future.');
+    else if(isLocked(date) && !(ex && ex.date === date && false)) errors.push('The report for ' + fmtDate(date) + ' is already submitted. Ask the admin to reopen it.');
+    if(!tracking) errors.push('Enter the tracking ID.');
+    if(!sender) errors.push('Enter the sender name.');
+    if(!loc) errors.push('Enter the delivery location.');
+    if(t === 'account1' && !(num(val('amount')) > 0)) errors.push('Enter a transaction amount above zero.');
+    if(t === 'independent'){
+      if(!(num(val('indBase')) > 0)) errors.push('Enter the DHL base rate (above zero).');
+      if(!(num(val('indCharge')) > 0)) errors.push('Enter the customer charge (above zero).');
+    }
+    if(t === 'economy'){
+      if(!(num(val('ecoBase')) > 0)) errors.push('Enter the DHL base rate (above zero).');
+      if(marginNow() == null) errors.push('Margin must be a number from 0 to 100.');
+    }
+    const c = errors.length ? null : calc();
+    if(!errors.length && !c) errors.push('Check the amounts entered.');
+    let due = 0, paid = 0; const ps = val('payStatus');
+    if(c){
+      due = t === 'account1' ? c.transactionAmount : c.customerCharge;
+      if(ps === 'partial'){
+        paid = num(val('amountPaid'));
+        if(!(paid > 0) || paid >= due) errors.push('For a part payment, enter an amount received that is above zero and below ' + fmt(due) + '.');
+      } else if(ps === 'paid') paid = due;
+    }
+    // duplicate tracking ID
+    let dupReason = '';
+    if(tracking){
+      const dup = state.shipments.find(s => !s.deleted && s.trackingId === tracking && (!ex || s.id !== ex.id));
+      if(dup){
+        $('#dupBox').hidden = false;
+        $('#dupInfo').textContent = 'Recorded on ' + fmtDate(dup.date) + ' for ' + dup.sender + '.';
+        if(!form.elements.dupOk.checked) errors.push('Tracking ID ' + tracking + ' already exists. Tick "legitimate repeat" and give a reason, or correct the ID.');
+        else if(!val('dupReason').trim()) errors.push('Give a reason for the repeated tracking ID.');
+        else dupReason = val('dupReason').trim();
+      }
+    }
+    if(errors.length){ err.innerHTML = errors.map(esc).join('<br>'); err.hidden = false; err.scrollIntoView({block:'nearest'}); return; }
+
+    const doc = { date, sender, trackingId:tracking, location:loc, accountType:t, paymentStatus:ps, amountPaid:paid, amountDue:due,
+      profit:c.profit, customerCharge:c.customerCharge, notes:val('notes').trim(), duplicateReason:dupReason || null,
+      createdBy: ex ? ex.createdBy : state.me.id, createdAt: ex ? ex.createdAt : Date.now() };
+    if(t === 'account1') Object.assign(doc, { transactionAmount:c.transactionAmount, commissionPct:c.commissionPct, commission:c.commission });
+    if(t === 'independent') Object.assign(doc, { baseRate:c.baseRate });
+    if(t === 'economy') Object.assign(doc, { baseRate:c.baseRate, vatPct:c.vatPct, fuelVat:c.fuelVat, subtotal:c.subtotal, marginPct:c.marginPct, margin:c.margin });
+    if(ex){ doc.updatedBy = state.me.id; doc.updatedAt = Date.now(); }
+    const id = ex ? ex.id : newId('s');
+    const btn = $('#shipSave'); btn.disabled = true;
+    try{
+      await state.db.doc('shipments/' + id).set(doc);
+    }catch(x){ btn.disabled = false; writeFail(x); return; }
+    if(ex){
+      const diffs = [];
+      [['date','Date'],['trackingId','Tracking ID'],['sender','Sender'],['location','Location'],['accountType','Account'],['customerCharge','Customer charge'],['profit','Profit'],['paymentStatus','Payment'],['notes','Notes']].forEach(p => {
+        if(String(ex[p[0]] == null ? '' : ex[p[0]]) !== String(doc[p[0]] == null ? '' : doc[p[0]])) diffs.push(p[1] + ': ' + (ex[p[0]] == null ? '—' : ex[p[0]]) + ' → ' + (doc[p[0]] == null ? '—' : doc[p[0]]));
+      });
+      audit('Shipment edited', tracking + ' (' + TYPE_LABEL[t] + '). ' + (diffs.join('; ') || 'No visible changes.'), date);
+    } else {
+      audit('Shipment added', tracking + ', ' + TYPE_LABEL[t] + ', profit ' + fmt(c.profit), date);
+    }
+    modalCancel = null; closeModal(); toast(ex ? 'Shipment updated' : 'Shipment saved');
+  });
+}
+
+/* =====================================================================
+   EXPENSE FORM
+   ===================================================================== */
+function openExpenseForm(ex){
+  if(!canAct()) return;
+  const v = ex || {};
+  const cats = state.categories.slice(); if(v.category && cats.indexOf(v.category) < 0) cats.push(v.category);
+  const date = v.date || (state.date > today() ? today() : state.date);
+  const html =
+  '<form id="expForm" novalidate><div class="sheet-h"><h2>' + (ex ? 'Edit expense' : 'Add expense') + '</h2><button type="button" class="icon" data-action="close-modal" aria-label="Close">×</button></div>' +
+  '<div class="sheet-b">' +
+    '<div class="grid2">' + fld('Expense date', '<input type="date" name="date" value="' + esc(date) + '" max="' + today() + '">') +
+      fld('Category', '<select name="category"><option value="">Choose a category</option>' + cats.map(c => '<option' + (c === v.category ? ' selected' : '') + '>' + esc(c) + '</option>').join('') + '</select>') + '</div>' +
+    fld('What was it for?', '<input type="text" name="description" autocomplete="off" placeholder="e.g. Transport for shipment dispatch" value="' + esc(v.description) + '">') +
+    '<div class="grid2">' + fld('Amount', moneyIn('amount', v.amount)) +
+      fld('Payment method', '<select name="method">' + PAY_METHODS.map(m => '<option' + (m === (v.method || 'Cash') ? ' selected' : '') + '>' + m + '</option>').join('') + '</select>') + '</div>' +
+    fld('Receipt or reference number (optional)', '<input type="text" name="reference" autocomplete="off" value="' + esc(v.reference) + '">') +
+    fld('Notes (optional)', '<textarea name="notes" rows="2">' + esc(v.notes) + '</textarea>') +
+    '<p class="sub">Do not enter DHL base rates here. They are already taken off in the shipment profit.</p>' +
+    '<p class="err" id="expErr" hidden></p>' +
+  '</div><div class="sheet-f"><button type="button" class="btn" data-action="close-modal">Cancel</button><button type="submit" class="btn primary" id="expSave">' + (ex ? 'Save changes' : 'Save expense') + '</button></div></form>';
+  openModal(html, { onMount:() => {
+    const form = $('#expForm'); const val = n => form.elements[n].value;
+    form.addEventListener('submit', async e => {
+      e.preventDefault(); const err = $('#expErr'); err.hidden = true;
+      const errors = [], date = val('date'), amount = num(val('amount'));
+      if(!date) errors.push('Choose the date.'); else if(date > today()) errors.push('The date cannot be in the future.');
+      else if(isLocked(date)) errors.push('The report for ' + fmtDate(date) + ' is already submitted. Ask the admin to reopen it.');
+      if(!val('category')) errors.push('Choose a category.');
+      if(!val('description').trim()) errors.push('Say what the money was spent on.');
+      if(!(amount > 0)) errors.push('Enter an amount above zero.');
+      if(errors.length){ err.innerHTML = errors.map(esc).join('<br>'); err.hidden = false; return; }
+      const doc = { date, category:val('category'), description:val('description').trim(), amount:Engine.r2(amount), method:val('method'),
+        reference:val('reference').trim(), notes:val('notes').trim(),
+        recordedBy: ex ? ex.recordedBy : state.me.id, createdAt: ex ? ex.createdAt : Date.now() };
+      if(ex){ doc.updatedBy = state.me.id; doc.updatedAt = Date.now(); }
+      const id = ex ? ex.id : newId('x'); const btn = $('#expSave'); btn.disabled = true;
+      try{ await state.db.doc('expenses/' + id).set(doc); }catch(x){ btn.disabled = false; writeFail(x); return; }
+      audit(ex ? 'Expense edited' : 'Expense added', doc.category + ': ' + doc.description + ', ' + fmt(doc.amount) + (ex ? ' (was ' + fmt(ex.amount) + ')' : ''), date);
+      modalCancel = null; closeModal(); toast(ex ? 'Expense updated' : 'Expense saved');
+    });
+  }});
+}
+
+/* =====================================================================
+   DELETE / SUBMIT / REOPEN
+   ===================================================================== */
+async function deleteRecord(kind, id){
+  if(!canAct()) return;
+  const isShip = kind === 'ship';
+  const item = (isShip ? state.shipments : state.expenses).find(x => x.id === id); if(!item) return;
+  if(isLocked(item.date)){ toast('This report is submitted. Ask the admin to reopen it.'); return; }
+  const what = isShip ? 'shipment ' + item.trackingId : 'expense "' + item.description + '"';
+  const res = await confirmModal({ title:'Delete ' + (isShip ? 'shipment' : 'expense') + '?', danger:true, confirmText:'Delete',
+    body:'<p>You are deleting ' + esc(what) + '.</p><p class="sub" style="margin-top:6px">It stops counting towards totals. The deletion is recorded in the audit log.</p>',
+    reason:{ label:'Reason for deleting', required:true } });
+  if(!res.ok) return;
+  try{ await state.db.doc((isShip ? 'shipments/' : 'expenses/') + id).update({ deleted:true, deletedBy:state.me.id, deletedAt:Date.now(), deleteReason:res.reason }); }
+  catch(e){ writeFail(e); return; }
+  audit(isShip ? 'Shipment deleted' : 'Expense deleted', what + '. Reason: ' + res.reason, item.date);
+  toast('Deleted');
+}
+
+async function submitReport(){
+  if(!canAct()) return;
+  const d = state.date;
+  if(d > today()){ toast('You cannot submit a report for a future date.'); return; }
+  if(isLocked(d)){ toast('This report was already submitted.'); return; }
+  const t = dayTotals(d), warn = [];
+  if(!t.count && !t.exps.length) warn.push('Nothing is recorded for this day. It will be submitted as a day with no business.');
+  if(t.pending) warn.push(t.pending + ' shipment' + (t.pending > 1 ? 's are' : ' is') + ' not fully paid yet.');
+  const body = '<table><tbody><tr><td>Shipments</td><td class="num">' + t.count + '</td></tr><tr><td>Total profit</td><td class="num">' + fmt(t.profit) + '</td></tr>' +
+    '<tr><td>Total expenses</td><td class="num">' + fmt(t.expenses) + '</td></tr><tr><td><strong>Net profit</strong></td><td class="num"><strong>' + fmt(t.net) + '</strong></td></tr></tbody></table>' +
+    warn.map(w => '<div class="note warn" style="margin:10px 0 0">' + esc(w) + '</div>').join('') +
+    '<p class="sub" style="margin-top:10px">After you submit, this day is locked. Only the admin can reopen it.</p>';
+  const res = await confirmModal({ title:'Submit report for ' + fmtDate(d) + '?', body, confirmText:'Submit report' });
+  if(!res.ok) return;
+  if(isLocked(d)){ toast('This report was already submitted.'); return; }
+  const prev = state.reports[d] || {};
+  try{
+    await state.db.doc('reports/' + d).set({ date:d, status:'submitted', submittedBy:state.me.id, submittedAt:Date.now(),
+      totals:{ shipments:t.count, profit:t.profit, expenses:t.expenses, net:t.net }, reopenCount:prev.reopenCount || 0 });
+  }catch(e){ writeFail(e); return; }
+  audit('Report submitted', 'Net profit ' + fmt(t.net) + ' (profit ' + fmt(t.profit) + ', expenses ' + fmt(t.expenses) + ')', d);
+  toast('Report submitted');
+}
+
+async function reopenReport(){
+  if(!state.isAdmin || !canAct()) return;
+  const d = state.date, prev = state.reports[d]; if(!prev) return;
+  const res = await confirmModal({ title:'Reopen report for ' + fmtDate(d) + '?', confirmText:'Reopen',
+    body:'<p>Office staff will be able to correct entries and submit again.</p>', reason:{ label:'Reason for reopening', required:true } });
+  if(!res.ok) return;
+  try{
+    await state.db.doc('reports/' + d).set(Object.assign({}, prev, { status:'reopened', reopenedBy:state.me.id, reopenedAt:Date.now(), reopenReason:res.reason, reopenCount:(prev.reopenCount || 0) + 1 }));
+  }catch(e){ writeFail(e); return; }
+  audit('Report reopened', 'Reason: ' + res.reason, d);
+  toast('Report reopened');
+}
+
+/* =====================================================================
+   VIEWS
+   ===================================================================== */
+function viewHeader(){
+  return '<header class="top"><div class="brand"><span class="mark" aria-hidden="true"></span><div><h1>' + esc(state.rates.businessName) + '</h1><p>Daily profit tracker</p></div></div>' +
+    '<div class="who"><span class="role' + (state.isAdmin ? ' admin' : '') + '">' + (state.isAdmin ? 'Admin' : 'Office staff') + '</span><span>' + esc(state.me.name || '') + '</span><button class="btn" data-action="sign-out">Sign out</button></div></header>';
+}
+function viewTabs(){
+  const tabs = [['day','Day'],['reports','Reports']].concat(state.isAdmin ? [['settings','Settings'],['audit','Audit log']] : []);
+  return '<nav class="tabs" role="tablist">' + tabs.map(t => '<button role="tab" aria-selected="' + (state.tab === t[0]) + '" data-action="tab" data-tab="' + t[0] + '">' + t[1] + '</button>').join('') + '</nav>';
+}
+const payPill = s => s.paymentStatus === 'paid' ? '<span class="pill good">Paid</span>' :
+  s.paymentStatus === 'partial' ? '<span class="pill warn">Part paid</span><div class="sub">' + fmt(s.amountPaid) + ' of ' + fmt(s.amountDue) + '</div>' : '<span class="pill warn">Pending</span>';
+
+function viewDay(){
+  const d = state.date, t = dayTotals(d), st = displayStatus(d), raw = statusOf(d), locked = raw === 'submitted', r = state.reports[d] || {};
+  const can = state.canWrite && !locked;
+  let banner;
+  if(st === 'submitted') banner = '<div class="note good"><strong>Submitted</strong> by ' + esc(nameOf(r.submittedBy)) + ' on ' + fmtStamp(r.submittedAt) + '. Entries are locked. ' + (state.isAdmin ? '<button class="link" data-action="reopen">Reopen report</button>' : 'Ask the admin to reopen it if something needs correcting.') + '</div>';
+  else if(st === 'reopened') banner = '<div class="note warn"><strong>Reopened</strong> by ' + esc(nameOf(r.reopenedBy)) + '. Reason: ' + esc(r.reopenReason || '—') + '. Make the correction, then submit again.</div>';
+  else if(st === 'missing') banner = '<div class="note bad"><strong>Not submitted.</strong> The ' + esc(state.rates.cutoff) + ' cutoff has passed. ' + (state.canWrite ? 'Review the entries and submit the report.' : '') + '</div>';
+  else if(st === 'draft') banner = '<div class="note info"><strong>Draft.</strong> Everything you enter is saved automatically. Submit when the day is complete.</div>';
+  else banner = '<div class="note">No entries yet. Add a shipment or an expense to start this day\'s report.</div>';
+
+  const typeRows = TYPE_ORDER.map(k => '<tr><td>' + TYPE_LABEL[k] + '</td><td class="num">' + t.byType[k].count + '</td><td class="num">' + fmt(t.byType[k].profit) + '</td></tr>').join('');
+  const shipRows = t.ships.map(s => '<tr><td><span class="track">' + esc(s.trackingId) + '</span>' + (s.duplicateReason ? '<div class="sub">Repeat: ' + esc(s.duplicateReason) + '</div>' : '') + '</td>' +
+    '<td>' + esc(s.sender) + '<div class="sub">' + esc(s.location) + '</div></td><td>' + TYPE_LABEL[s.accountType] + '</td>' +
+    '<td class="num">' + (s.accountType === 'account1' ? fmt(s.transactionAmount) : fmt(s.customerCharge)) + '</td><td class="num"><strong' + (s.profit < 0 ? ' class="neg"' : '') + '>' + fmt(s.profit) + '</strong></td><td>' + payPill(s) + '</td>' +
+    '<td class="act">' + (can ? '<button class="link" data-action="edit-ship" data-id="' + s.id + '">Edit</button><button class="link danger" data-action="del-ship" data-id="' + s.id + '">Delete</button>' : '') + '</td></tr>').join('');
+  const expRows = t.exps.map(e => '<tr><td>' + esc(e.category) + '</td><td>' + esc(e.description) + (e.reference ? '<div class="sub">Ref: ' + esc(e.reference) + '</div>' : '') + '</td><td>' + esc(e.method) + '</td>' +
+    '<td class="num">' + fmt(e.amount) + '</td><td>' + esc(nameOf(e.recordedBy)) + '</td><td class="act">' + (can ? '<button class="link" data-action="edit-exp" data-id="' + e.id + '">Edit</button><button class="link danger" data-action="del-exp" data-id="' + e.id + '">Delete</button>' : '') + '</td></tr>').join('');
+
+  return '<div class="datebar"><button class="btn ghost" data-action="prev-day" aria-label="Previous day">‹</button><input type="date" id="dateInput" value="' + d + '" aria-label="Report date"><button class="btn ghost" data-action="next-day" aria-label="Next day">›</button>' +
+    '<button class="btn ghost" data-action="today">Today</button><span>' + statusPill(st) + '</span></div>' + banner +
+    (can ? '<div class="actions"><button class="btn primary" data-action="new-ship">New shipment</button><button class="btn" data-action="new-exp">Add expense</button><span class="spacer"></span><button class="btn accent" data-action="submit">Submit report</button></div>' : '') +
+    '<section class="cards"><div class="card"><span class="k">Total profit</span><b class="v">' + fmt(t.profit) + '</b><span class="s">' + t.count + ' shipment' + (t.count === 1 ? '' : 's') + (t.pending ? ', ' + t.pending + ' not fully paid' : '') + '</span></div>' +
+    '<div class="card"><span class="k">Total expenses</span><b class="v">' + fmt(t.expenses) + '</b><span class="s">' + t.exps.length + ' item' + (t.exps.length === 1 ? '' : 's') + '</span></div>' +
+    '<div class="card net"><span class="k">Net profit</span><b class="v' + (t.net < 0 ? ' neg' : '') + '">' + fmt(t.net) + '</b><span class="s">Total profit minus expenses</span></div></section>' +
+    '<div class="panel"><h2>Profit by account type</h2><div class="scroll"><table><thead><tr><th>Account</th><th class="num">Shipments</th><th class="num">Profit</th></tr></thead><tbody>' + typeRows + '</tbody></table></div></div>' +
+    '<div class="panel"><h2>Shipments</h2>' + (t.ships.length ? '<div class="scroll"><table><thead><tr><th>Tracking ID</th><th>Sender / destination</th><th>Account</th><th class="num">Customer pays</th><th class="num">Profit</th><th>Payment</th><th></th></tr></thead><tbody>' + shipRows + '</tbody></table></div>' : '<div class="empty">No shipments recorded for this day.</div>') + '</div>' +
+    '<div class="panel"><h2>Expenses</h2>' + (t.exps.length ? '<div class="scroll"><table><thead><tr><th>Category</th><th>Description</th><th>Paid by</th><th class="num">Amount</th><th>Recorded by</th><th></th></tr></thead><tbody>' + expRows + '</tbody></table></div>' : '<div class="empty">No expenses recorded for this day.</div>') + '</div>';
+}
+
+/* ---------- reports ---------- */
+function computeRange(){
+  const r = state.range, t = today(); let from, to;
+  if(r.preset === 'week'){ const dow = (parse(t).getDay() + 6) % 7; from = addDays(t, -dow); to = addDays(from, 6); }
+  else if(r.preset === 'month'){ const d = parse(t); from = ymd(new Date(d.getFullYear(), d.getMonth(), 1)); to = ymd(new Date(d.getFullYear(), d.getMonth() + 1, 0)); }
+  else if(r.preset === 'last'){ const d = parse(t); from = ymd(new Date(d.getFullYear(), d.getMonth() - 1, 1)); to = ymd(new Date(d.getFullYear(), d.getMonth(), 0)); }
+  else { from = r.from || t; to = r.to || t; if(from > to){ const x = from; from = to; to = x; } }
+  return { from, to };
+}
+function rangeData(){
+  const R = computeRange(), days = [], t = today(); let cur = R.from, guard = 0;
+  while(cur <= R.to && guard++ < 400){
+    if(cur <= t){
+      const tot = dayTotals(cur), raw = statusOf(cur), ds = displayStatus(cur);
+      if(tot.count || tot.exps.length || raw !== 'notstarted' || ds === 'missing') days.push(Object.assign({ date:cur, raw, ds }, tot));
+    }
+    cur = addDays(cur, 1);
+  }
+  const sub = days.filter(x => x.raw === 'submitted');
+  const totals = { profit:0, expenses:0, net:0, shipments:0, byType:{ account1:{count:0,profit:0}, independent:{count:0,profit:0}, economy:{count:0,profit:0} } };
+  const cats = {};
+  sub.forEach(x => {
+    totals.profit = Engine.r2(totals.profit + x.profit); totals.expenses = Engine.r2(totals.expenses + x.expenses); totals.shipments += x.count;
+    TYPE_ORDER.forEach(k => { totals.byType[k].count += x.byType[k].count; totals.byType[k].profit = Engine.r2(totals.byType[k].profit + x.byType[k].profit); });
+    x.exps.forEach(e => { cats[e.category] = Engine.r2((cats[e.category] || 0) + e.amount); });
+  });
+  totals.net = Engine.r2(totals.profit - totals.expenses);
+  const byCat = Object.keys(cats).map(k => [k, cats[k]]).sort((a, b) => b[1] - a[1]);
+  return { from:R.from, to:R.to, days, sub, excluded:days.filter(x => x.raw !== 'submitted'), totals, byCat };
+}
+
+function viewReports(){
+  const D = rangeData(), r = state.range;
+  const presets = [['week','This week'],['month','This month'],['last','Last month'],['custom','Custom range']];
+  const dayRows = D.days.slice().reverse().map(x => {
+    const counted = x.raw === 'submitted', noData = !x.count && !x.exps.length && !counted;
+    return '<tr class="' + (counted ? '' : 'dim') + '"><td><strong>' + fmtShort(x.date) + '</strong></td><td>' + statusPill(x.ds) + '</td>' +
+      '<td class="num">' + (noData ? '—' : x.count) + '</td><td class="num">' + (noData ? '—' : fmt(x.profit)) + '</td><td class="num">' + (noData ? '—' : fmt(x.expenses)) + '</td>' +
+      '<td class="num">' + (noData ? '—' : fmt(x.net)) + '</td><td class="act"><button class="link" data-action="open-day" data-date="' + x.date + '">Open</button></td></tr>';
+  }).join('');
+  const typeRows = TYPE_ORDER.map(k => '<tr><td>' + TYPE_LABEL[k] + '</td><td class="num">' + D.totals.byType[k].count + '</td><td class="num">' + fmt(D.totals.byType[k].profit) + '</td></tr>').join('');
+  const catRows = D.byCat.map(c => '<tr><td>' + esc(c[0]) + '</td><td class="num">' + fmt(c[1]) + '</td><td class="num">' + (D.totals.expenses ? Math.round(c[1] / D.totals.expenses * 100) : 0) + '%</td></tr>').join('');
+  const warn = D.excluded.length ? '<div class="note warn"><strong>' + D.sub.length + ' of ' + D.days.length + ' days submitted.</strong> The totals below leave out: ' +
+    D.excluded.map(x => fmtShort(x.date) + ' (' + STATUS[x.ds][0].toLowerCase() + ')').join(', ') + '. Missing days are not counted as zero.</div>' : '';
+  return '<div class="actions"><div class="seg" style="margin:0;max-width:520px;flex:1">' + presets.map(p => '<label><input type="radio" name="preset" value="' + p[0] + '"' + (r.preset === p[0] ? ' checked' : '') + ' data-action="preset" data-preset="' + p[0] + '"><span>' + p[1] + '</span></label>').join('') + '</div></div>' +
+    (r.preset === 'custom' ? '<div class="datebar"><input type="date" id="rangeFrom" value="' + D.from + '" aria-label="From"><span class="muted">to</span><input type="date" id="rangeTo" value="' + D.to + '" aria-label="To"></div>' : '') +
+    '<p class="sub" style="margin-bottom:12px">' + fmtDate(D.from) + ' to ' + fmtDate(D.to) + '</p>' + warn +
+    '<section class="cards"><div class="card"><span class="k">Total profit</span><b class="v">' + fmt(D.totals.profit) + '</b><span class="s">' + D.totals.shipments + ' shipments, submitted days only</span></div>' +
+    '<div class="card"><span class="k">Total expenses</span><b class="v">' + fmt(D.totals.expenses) + '</b><span class="s">Submitted days only</span></div>' +
+    '<div class="card net"><span class="k">Net profit</span><b class="v' + (D.totals.net < 0 ? ' neg' : '') + '">' + fmt(D.totals.net) + '</b><span class="s">' + D.sub.length + ' of ' + D.days.length + ' days submitted</span></div></section>' +
+    (state.isAdmin ? '<div class="actions"><button class="btn primary" data-action="export-xlsx">Download Excel</button><button class="btn" data-action="export-pdf">Download PDF</button></div>' : '') +
+    '<div class="panel"><h2>Daily reports</h2>' + (D.days.length ? '<div class="scroll"><table><thead><tr><th>Date</th><th>Status</th><th class="num">Shipments</th><th class="num">Profit</th><th class="num">Expenses</th><th class="num">Net</th><th></th></tr></thead><tbody>' + dayRows + '</tbody></table></div>' : '<div class="empty">No activity in this period yet.</div>') + '</div>' +
+    '<div class="cols2"><div class="panel"><h2>Profit by account type</h2><div class="scroll"><table><thead><tr><th>Account</th><th class="num">Shipments</th><th class="num">Profit</th></tr></thead><tbody>' + typeRows + '</tbody></table></div></div>' +
+    '<div class="panel"><h2>Expenses by category</h2>' + (D.byCat.length ? '<div class="scroll"><table><thead><tr><th>Category</th><th class="num">Amount</th><th class="num">Share</th></tr></thead><tbody>' + catRows + '</tbody></table></div>' : '<div class="empty">No expenses in submitted reports.</div>') + '</div></div>';
+}
+
+/* ---------- settings ---------- */
+function viewSettings(){
+  const R = state.rates;
+  if(!state.catDraft) state.catDraft = state.categories.slice();
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const tests = Engine.selfTest(), passed = tests.filter(t => t.pass).length;
+  return '<div class="panel"><h2>Business and rates</h2><div class="pb">' +
+    '<div class="grid2">' + fld('Business name', '<input type="text" id="setBiz" value="' + esc(R.businessName) + '">') +
+      fld('Daily report cutoff time', '<input type="time" id="setCutoff" value="' + esc(R.cutoff) + '">', 'After this time, a day with no submitted report shows as Missing.') + '</div>' +
+    '<div class="grid2">' + fld('Account 1 commission (%)', '<input type="text" id="setA1" inputmode="decimal" value="' + R.account1Pct + '">') +
+      fld('Fuel VAT (%)', '<input type="text" id="setVat" inputmode="decimal" value="' + R.fuelVatPct + '">') + '</div>' +
+    '<div class="grid2">' + fld('Default Economy margin (%)', '<input type="text" id="setMargin" inputmode="decimal" value="' + R.defaultMarginPct + '">') +
+      fld('Margin choices (%, separated by commas)', '<input type="text" id="setMarginOpts" value="' + esc(R.marginOptions.join(', ')) + '">') + '</div>' +
+    '<div class="fld"><span>Working days</span><div class="checks">' + days.map((n, i) => '<label><input type="checkbox" name="wd" value="' + i + '"' + (R.workDays.indexOf(i) > -1 ? ' checked' : '') + '> ' + n + '</label>').join('') + '</div><small>Days with no report are only marked Missing on working days.</small></div>' +
+    '<p class="sub">Changing a rate affects new shipments only. Saved shipments keep the amounts they were recorded with.</p></div></div>' +
+    '<div class="panel"><h2>Expense categories</h2><div class="pb"><div class="chips" id="catList">' + catChips() + '</div>' +
+    '<div class="addrow"><input type="text" id="newCat" placeholder="New category name" autocomplete="off"><button class="btn" data-action="add-cat">Add</button></div></div></div>' +
+    '<div class="actions"><button class="btn primary" data-action="save-settings">Save settings</button></div>' +
+    '<div class="panel"><h2>Calculation check <span class="pill ' + (passed === tests.length ? 'good' : 'bad') + '">' + passed + ' of ' + tests.length + ' passed</span></h2><div class="pb"><ul class="tests" style="margin:0;padding-left:18px">' +
+    tests.map(t => '<li>' + (t.pass ? '✓ ' : '✗ ') + esc(t.name) + (t.pass ? '' : ' (got ' + esc(t.got) + ')') + '</li>').join('') + '</ul></div></div>';
+}
+const catChips = () => state.catDraft.map((c, i) => '<span class="chip">' + esc(c) + '<button type="button" data-action="del-cat" data-i="' + i + '" aria-label="Remove ' + esc(c) + '">×</button></span>').join('');
+
+async function saveSettings(){
+  if(!state.isAdmin || !canAct()) return;
+  const n = id => num($('#' + id).value), bad = [];
+  const biz = $('#setBiz').value.trim() || 'DHL Office';
+  const a1 = n('setA1'), vat = n('setVat'), mg = n('setMargin');
+  [['Account 1 commission', a1], ['Fuel VAT', vat], ['Default margin', mg]].forEach(p => { if(!(p[1] >= 0 && p[1] <= 100)) bad.push(p[0] + ' must be a number from 0 to 100.'); });
+  const opts = Array.from(new Set($('#setMarginOpts').value.split(',').map(s => num(s)).filter(x => isFinite(x) && x >= 0 && x <= 100))).sort((a, b) => a - b);
+  if(!opts.length) bad.push('Add at least one margin choice.');
+  const cut = $('#setCutoff').value; if(!/^\d{2}:\d{2}$/.test(cut)) bad.push('Set a cutoff time.');
+  const wd = $$('input[name=wd]:checked').map(x => Number(x.value)); if(!wd.length) bad.push('Pick at least one working day.');
+  if(!state.catDraft.length) bad.push('Keep at least one expense category.');
+  if(bad.length){ toast(bad[0]); return; }
+  const old = state.rates, changes = [];
+  [['Account 1 commission', old.account1Pct, a1], ['Fuel VAT', old.fuelVatPct, vat], ['Default margin', old.defaultMarginPct, mg], ['Cutoff', old.cutoff, cut], ['Margin choices', old.marginOptions.join(','), opts.join(',')]].forEach(p => { if(String(p[1]) !== String(p[2])) changes.push(p[0] + ': ' + p[1] + ' → ' + p[2]); });
+  try{
+    await state.db.doc('settings/rates').set({ businessName:biz, account1Pct:a1, fuelVatPct:vat, defaultMarginPct:mg, marginOptions:opts, cutoff:cut, workDays:wd });
+    await state.db.doc('settings/categories').set({ list:state.catDraft.slice() });
+  }catch(e){ writeFail(e); return; }
+  audit('Settings changed', changes.join('; ') || 'Other settings updated');
+  toast('Settings saved');
+}
+
+/* ---------- audit ---------- */
+function viewAudit(){
+  const rows = state.audit.map(a => '<tr><td style="white-space:nowrap">' + fmtStamp(a.at) + '</td><td>' + esc(nameOf(a.by)) + '</td><td>' + esc(a.action) + (a.date ? '<div class="sub">Report date ' + fmtShort(a.date) + '</div>' : '') + '</td><td>' + esc(a.detail) + '</td></tr>').join('');
+  return '<div class="panel"><h2>Audit log <span class="sub">Latest 300 changes</span></h2>' + (rows ? '<div class="scroll"><table><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>' + rows + '</tbody></table></div>' : '<div class="empty">No changes recorded yet.</div>') + '</div>';
+}
+
+/* ---------- shell ---------- */
+function render(){
+  const v = $('#view');
+  if(state.fatal){ v.innerHTML = '<div class="gate"><h1>Cannot open the tracker</h1><p>' + esc(state.fatal) + '</p></div>'; return; }
+  if(!state.ready){ v.innerHTML = '<div class="gate"><p>Loading…</p></div>'; return; }
+  let body = '';
+  if(state.tab === 'day') body = viewDay();
+  else if(state.tab === 'reports') body = viewReports();
+  else if(state.tab === 'settings' && state.isAdmin) body = viewSettings();
+  else if(state.tab === 'audit' && state.isAdmin) body = viewAudit();
+  v.innerHTML = viewHeader() + (state.error ? '<div class="note bad">' + esc(state.error) + '</div>' : '') +
+    (!state.canWrite ? '<div class="note info">You have view-only access. You can read reports but not add or change records.</div>' : '') + viewTabs() + body;
+  ensureNames(collectIds()).then(changed => { if(changed) scheduleRender(); });
+}
+
+/* =====================================================================
+   EXPORTS
+   ===================================================================== */
+async function saveFile(filename, data){
+  if(!state.downloads){ toast('File downloads are not available in this view.'); return; }
+  try{ await state.downloads.save({ filename, data }); toast('File saved'); }
+  catch(e){ if(!e || e.code !== 'declined') toast('Could not save the file.'); }
+}
+async function exportXlsx(){
+  if(!window.XLSX){ toast('The Excel library did not load. Refresh and try again.'); return; }
+  const D = rangeData(); await ensureNames(collectIds());
+  const M = n => ({ t:'n', v:Number(n) || 0, z:'#,##0.00' });
+  const biz = state.rates.businessName, X = window.XLSX;
+  const summary = [[biz + ' — Profit report'], ['Period', D.from + ' to ' + D.to], ['Generated', new Date().toLocaleString('en-GB')], ['Generated by', nameOf(state.me.id)], [],
+    ['Status', D.sub.length + ' of ' + D.days.length + ' days submitted']];
+  if(D.excluded.length){ summary.push(['Warning', 'Totals exclude days that were not submitted: ' + D.excluded.map(x => x.date + ' (' + STATUS[x.ds][0] + ')').join(', ')]); }
+  summary.push([], ['Totals (submitted days only)'], ['Total profit', M(D.totals.profit)], ['Total expenses', M(D.totals.expenses)], ['Net profit', M(D.totals.net)], [],
+    ['Profit by account type', 'Shipments', 'Profit']);
+  TYPE_ORDER.forEach(k => summary.push([TYPE_LABEL[k], D.totals.byType[k].count, M(D.totals.byType[k].profit)]));
+  summary.push([], ['Expenses by category', 'Amount']); D.byCat.forEach(c => summary.push([c[0], M(c[1])]));
+  const daily = [['Date','Status','Shipments','Profit','Expenses','Net','Counted in totals','Submitted by','Submitted at']];
+  D.days.forEach(x => { const r = state.reports[x.date] || {}; daily.push([x.date, STATUS[x.ds][0], x.count, M(x.profit), M(x.expenses), M(x.net), x.raw === 'submitted' ? 'Yes' : 'No', r.submittedBy ? nameOf(r.submittedBy) : '', r.submittedAt ? new Date(r.submittedAt).toLocaleString('en-GB') : '']); });
+  const ships = [['Date','Report status','Tracking ID','Sender','Delivery location','Account type','Base rate / transaction amount','Fuel VAT','Margin %','Customer charge','Profit','Payment status','Amount received','Notes','Recorded by']];
+  const exps = [['Date','Category','Description','Amount','Payment method','Reference','Recorded by','Notes']];
+  D.days.forEach(x => {
+    x.ships.forEach(s => ships.push([s.date, STATUS[x.ds][0], s.trackingId, s.sender, s.location, TYPE_LABEL[s.accountType], M(s.accountType === 'account1' ? s.transactionAmount : s.baseRate), s.fuelVat != null ? M(s.fuelVat) : '', s.marginPct != null ? s.marginPct : '', s.customerCharge != null ? M(s.customerCharge) : '', M(s.profit), s.paymentStatus, M(s.amountPaid), s.notes || '', nameOf(s.createdBy)]));
+    x.exps.forEach(e => exps.push([e.date, e.category, e.description, M(e.amount), e.method, e.reference || '', nameOf(e.recordedBy), e.notes || '']));
+  });
+  const wb = X.utils.book_new();
+  [['Summary', summary, [34, 22, 16]], ['Daily', daily, [12, 12, 10, 14, 14, 14, 16, 18, 20]], ['Shipments', ships, [12, 14, 18, 22, 22, 14, 18, 12, 10, 16, 14, 14, 16, 24, 18]], ['Expenses', exps, [12, 22, 32, 14, 16, 16, 18, 24]]].forEach(s => {
+    const ws = X.utils.aoa_to_sheet(s[1]); ws['!cols'] = s[2].map(w => ({ wch:w })); X.utils.book_append_sheet(wb, ws, s[0]);
+  });
+  await saveFile('dhl-profit-report-' + D.from + '-to-' + D.to + '.xlsx', X.write(wb, { bookType:'xlsx', type:'array' }));
+}
+async function exportPdf(){
+  if(!(window.jspdf && window.jspdf.jsPDF)){ toast('The PDF library did not load. Refresh and try again.'); return; }
+  const D = rangeData(); await ensureNames(collectIds());
+  const doc = new window.jspdf.jsPDF({ unit:'pt', format:'a4' });
+  if(typeof doc.autoTable !== 'function'){ toast('The PDF table library did not load. Refresh and try again.'); return; }
+  const N = n => 'NGN ' + (Number(n) || 0).toLocaleString('en-NG', { minimumFractionDigits:2, maximumFractionDigits:2 });
+  let y = 44;
+  doc.setFontSize(17); doc.setFont('helvetica', 'bold'); doc.text(state.rates.businessName + ' - Profit report', 40, y);
+  doc.setFontSize(10); doc.setFont('helvetica', 'normal'); y += 18; doc.text('Period: ' + D.from + ' to ' + D.to, 40, y);
+  y += 14; doc.text('Generated: ' + new Date().toLocaleString('en-GB') + ' by ' + nameOf(state.me.id), 40, y);
+  y += 14; doc.text('Status: ' + D.sub.length + ' of ' + D.days.length + ' days submitted', 40, y);
+  if(D.excluded.length){
+    y += 14; const msg = doc.splitTextToSize('Note: totals exclude days not submitted: ' + D.excluded.map(x => x.date + ' (' + STATUS[x.ds][0] + ')').join(', ') + '.', 515);
+    doc.setTextColor(180, 35, 24); doc.text(msg, 40, y); doc.setTextColor(0, 0, 0); y += (msg.length - 1) * 12;
+  }
+  const head = { fillColor:[22, 34, 46], textColor:255 };
+  doc.autoTable({ startY:y + 14, head:[['Totals (submitted days only)', '']], body:[['Total profit', N(D.totals.profit)], ['Total expenses', N(D.totals.expenses)], ['Net profit', N(D.totals.net)]], styles:{ fontSize:10 }, headStyles:head, columnStyles:{ 1:{ halign:'right' } } });
+  doc.autoTable({ startY:doc.lastAutoTable.finalY + 14, head:[['Date', 'Status', 'Shipments', 'Profit', 'Expenses', 'Net']],
+    body:D.days.map(x => [x.date, STATUS[x.ds][0], x.count, N(x.profit), N(x.expenses), N(x.net)]), styles:{ fontSize:9 }, headStyles:head, columnStyles:{ 2:{ halign:'right' }, 3:{ halign:'right' }, 4:{ halign:'right' }, 5:{ halign:'right' } } });
+  doc.autoTable({ startY:doc.lastAutoTable.finalY + 14, head:[['Profit by account type', 'Shipments', 'Profit']],
+    body:TYPE_ORDER.map(k => [TYPE_LABEL[k], D.totals.byType[k].count, N(D.totals.byType[k].profit)]), styles:{ fontSize:9 }, headStyles:head, columnStyles:{ 1:{ halign:'right' }, 2:{ halign:'right' } } });
+  if(D.byCat.length) doc.autoTable({ startY:doc.lastAutoTable.finalY + 14, head:[['Expenses by category', 'Amount']], body:D.byCat.map(c => [c[0], N(c[1])]), styles:{ fontSize:9 }, headStyles:head, columnStyles:{ 1:{ halign:'right' } } });
+  const rows = []; D.sub.forEach(x => x.ships.forEach(s => rows.push([s.date, s.trackingId, s.sender, TYPE_LABEL[s.accountType], N(s.profit), s.paymentStatus])));
+  if(rows.length) doc.autoTable({ startY:doc.lastAutoTable.finalY + 14, head:[['Date', 'Tracking ID', 'Sender', 'Account', 'Profit', 'Payment']], body:rows, styles:{ fontSize:8 }, headStyles:head, columnStyles:{ 4:{ halign:'right' } } });
+  await saveFile('dhl-profit-report-' + D.from + '-to-' + D.to + '.pdf', doc.output('arraybuffer'));
+}
+
+/* =====================================================================
+   EVENTS
+   ===================================================================== */
+const actions = {
+  'tab': el => { state.tab = el.dataset.tab; if(state.tab === 'settings') state.catDraft = state.categories.slice(); render(); },
+  'prev-day': () => { state.date = addDays(state.date, -1); render(); },
+  'next-day': () => { if(state.date < today()){ state.date = addDays(state.date, 1); render(); } },
+  'today': () => { state.date = today(); render(); },
+  'new-ship': () => openShipmentForm(null),
+  'edit-ship': el => { const s = state.shipments.find(x => x.id === el.dataset.id); if(s && !isLocked(s.date)) openShipmentForm(s); },
+  'del-ship': el => deleteRecord('ship', el.dataset.id),
+  'new-exp': () => openExpenseForm(null),
+  'edit-exp': el => { const e = state.expenses.find(x => x.id === el.dataset.id); if(e && !isLocked(e.date)) openExpenseForm(e); },
+  'del-exp': el => deleteRecord('exp', el.dataset.id),
+  'submit': () => submitReport(),
+  'reopen': () => reopenReport(),
+  'sign-out': () => signOut(),
+  'password-reset': () => showPasswordReset(),
+  'login-screen': () => showAuthGate(''),
+  'close-modal': () => closeModal(),
+  'preset': el => { state.range.preset = el.dataset.preset; if(state.range.preset === 'custom' && !state.range.from){ const R = computeRange(); state.range.from = R.from; state.range.to = R.to; } render(); },
+  'open-day': el => { state.date = el.dataset.date; state.tab = 'day'; render(); window.scrollTo(0, 0); },
+  'export-xlsx': () => exportXlsx(),
+  'export-pdf': () => exportPdf(),
+  'save-settings': () => saveSettings(),
+  'add-cat': () => {
+    const i = $('#newCat'), name = i.value.trim(); if(!name) return;
+    if(state.catDraft.some(c => c.toLowerCase() === name.toLowerCase())){ toast('That category already exists.'); return; }
+    state.catDraft.push(name); i.value = ''; $('#catList').innerHTML = catChips();
+  },
+  'del-cat': el => { state.catDraft.splice(Number(el.dataset.i), 1); $('#catList').innerHTML = catChips(); }
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]'); if(!el) return;
+  const a = actions[el.dataset.action]; if(a){ if(el.tagName === 'A') e.preventDefault(); a(el, e); }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if(t.id === 'dateInput'){ if(t.value){ state.date = t.value > today() ? today() : t.value; render(); } }
+  else if(t.id === 'rangeFrom' || t.id === 'rangeTo'){ state.range.from = $('#rangeFrom').value; state.range.to = $('#rangeTo').value; render(); }
+});
+document.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.id === 'newCat'){ e.preventDefault(); actions['add-cat'](); } });
+
+/* =====================================================================
+   SUPABASE MVP RUNTIME
+   ===================================================================== */
+let supabaseClient = null;
+let activeUserId = null;
+const liveRefreshers = new Set();
+const liveTimers = new Set();
+
+function stopWatchers(){
+  liveTimers.forEach(t => clearInterval(t)); liveTimers.clear();
+  liveRefreshers.clear();
+}
+function showAuthGate(message, mode){
+  const view = $('#view');
+  if(!view) return;
+  if(mode === 'access'){
+    view.innerHTML = '<div class="gate"><div class="panel" style="text-align:left;padding:22px"><h1>Account not activated</h1><p class="muted" style="margin:8px 0 18px">This sign-in is not yet linked to an active organization account. Ask the tracker administrator to activate your access.</p>' +
+      (message ? '<p class="err">' + esc(message) + '</p>' : '') + '<button class="btn" data-action="sign-out">Sign out</button></div></div>';
+    return;
+  }
+  view.innerHTML = '<div class="gate"><form id="loginForm" class="panel" style="text-align:left;padding:22px;max-width:420px;margin:0 auto">' +
+    '<h1 style="margin-bottom:4px">DHL Office Profit Tracker</h1><p class="muted" style="margin-bottom:18px">Sign in with the account provided by your organization.</p>' +
+    '<label class="fld"><span>Email</span><input type="email" name="email" autocomplete="username" required></label>' +
+    '<label class="fld"><span>Password</span><input type="password" name="password" autocomplete="current-password" required></label>' +
+    '<p class="err" id="loginError"' + (message ? '' : ' hidden') + '>' + esc(message || '') + '</p>' +
+    '<button class="btn primary" type="submit" id="loginButton" style="width:100%">Sign in</button>' +
+    '<p style="margin-top:10px"><button type="button" class="link" data-action="password-reset">Set or reset password</button></p>' +
+    '<p class="sub" style="margin-top:12px">Accounts are issued by the tracker administrator. Self-registration is disabled.</p></form></div>';
+}
+function showPasswordReset(){
+  const view=$('#view');
+  view.innerHTML='<div class="gate"><form id="passwordResetForm" class="panel" style="text-align:left;padding:22px;max-width:420px;margin:0 auto">' +
+    '<h1>Set or reset password</h1><p class="muted" style="margin:8px 0 18px">Enter your organization email. If the account exists, Supabase will email a secure reset link.</p>' +
+    '<label class="fld"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>' +
+    '<p class="sub" id="resetStatus" hidden></p><button class="btn primary" type="submit" id="resetButton">Email reset link</button> ' +
+    '<button type="button" class="link" data-action="login-screen">Back to sign in</button></form></div>';
+}
+function showPasswordUpdate(){
+  const view=$('#view');
+  view.innerHTML='<div class="gate"><form id="passwordUpdateForm" class="panel" style="text-align:left;padding:22px;max-width:420px;margin:0 auto">' +
+    '<h1>Choose a password</h1><p class="muted" style="margin:8px 0 18px">Choose a strong password for your account.</p>' +
+    '<label class="fld"><span>New password</span><input type="password" name="password" autocomplete="new-password" minlength="10" required></label>' +
+    '<label class="fld"><span>Confirm password</span><input type="password" name="confirmPassword" autocomplete="new-password" minlength="10" required></label>' +
+    '<p class="err" id="passwordUpdateError" hidden></p><button class="btn primary" type="submit" id="passwordUpdateButton">Save password</button></form></div>';
+}
+function hasRecoveryLink(){
+  const hash=new URLSearchParams((location.hash || '').replace(/^#/,''));
+  const query=new URLSearchParams(location.search || '');
+  return hash.get('type') === 'recovery' || query.get('type') === 'recovery' || query.has('code');
+}
+function showSetupGate(message){
+  const view = $('#view');
+  if(view) view.innerHTML = '<div class="gate"><h1>Setup required</h1><p>' + esc(message) + '</p></div>';
+}
+function mapKind(path){
+  const p = String(path || '').split('/');
+  if(p[0] === 'settings') return { kind:'settings', id:p[1] };
+  return { kind:p[0], id:p[1] };
+}
+function snapshotDoc(row){
+  return { exists:!!row, data:() => row ? row.payload : undefined };
+}
+function createDatabaseAdapter(){
+  function watch(fetchRows, callback, onError){
+    let previous = null, stopped = false, running = false;
+    const refresh = async () => {
+      if(stopped || running || !state.orgId || !supabaseClient) return;
+      running = true;
+      try{
+        const rows = await fetchRows();
+        const serial = JSON.stringify(rows);
+        if(serial !== previous){ previous = serial; callback(rows); }
+      }catch(e){ if(onError) onError(e); }
+      finally{ running = false; }
+    };
+    liveRefreshers.add(refresh);
+    refresh();
+    const timer = setInterval(refresh, Math.max(8000, Number((window.APP_CONFIG || {}).pollIntervalMs) || 15000));
+    liveTimers.add(timer);
+    return () => { stopped = true; clearInterval(timer); liveTimers.delete(timer); liveRefreshers.delete(refresh); };
+  }
+  function collection(table){
+    let sortField = null, descending = false, maxRows = null;
+    const query = {
+      orderBy(field, direction){ sortField = field; descending = direction === 'desc'; return query; },
+      limit(n){ maxRows = Number(n); return query; },
+      onSnapshot(callback, onError){
+        return watch(async () => {
+          if(table === 'audit'){
+            let q = supabaseClient.from('audit_events').select('id,at_ms,by,action,detail,date').eq('org_id',state.orgId);
+            q = q.order('at_ms',{ascending:!descending});
+            if(maxRows) q = q.limit(maxRows);
+            const {data,error} = await q; if(error) throw error;
+            return (data || []).map(r => ({id:String(r.id),payload:{at:Number(r.at_ms),by:r.by,action:r.action,detail:r.detail,date:r.date}}));
+          }
+          let q = supabaseClient.from('tracker_records').select('record_id,payload').eq('org_id',state.orgId).eq('kind',table);
+          if(sortField) q = q.order(sortField,{ascending:!descending}); else q = q.order('record_id',{ascending:true});
+          if(maxRows) q = q.limit(maxRows);
+          const all=[]; let offset=0, page=[];
+          do{
+            const {data,error} = await q.range(offset,offset+499); if(error) throw error;
+            page=data || []; all.push(...page); offset += 500;
+          }while(page.length === 500 && (!maxRows || all.length < maxRows));
+          return all.map(r => ({id:r.record_id,payload:r.payload}));
+        }, rows => callback({docs:rows.map(r => ({id:r.id,data:() => r.payload}))}), onError);
+      },
+      async add(){ throw new Error('Audit records are written atomically by the database.'); }
+    };
+    return query;
+  }
+  return {
+    doc(path){
+      const {kind,id} = mapKind(path);
+      return {
+        async set(payload){
+          const {error} = await supabaseClient.rpc('tracker_upsert',{p_kind:kind,p_id:id,p_payload:payload});
+          if(error) throw error;
+        },
+        async update(patch){
+          const {error} = await supabaseClient.rpc('tracker_patch',{p_kind:kind,p_id:id,p_patch:patch});
+          if(error) throw error;
+        },
+        onSnapshot(callback,onError){
+          return watch(async () => {
+            const {data,error} = await supabaseClient.from('tracker_records').select('record_id,payload')
+              .eq('org_id',state.orgId).eq('kind',kind).eq('record_id',id).maybeSingle();
+            if(error) throw error;
+            return data ? [{id:data.record_id,payload:data.payload}] : [];
+          }, rows => callback(snapshotDoc(rows[0] || null)), onError);
+        }
+      };
+    },
+    collection
+  };
+}
+function makeUserAdapter(user,membership){
+  return {
+    async me(){ return {id:user.id,name:membership.display_name || user.email || ''}; },
+    async canEdit(){ return membership.role === 'admin'; },
+    async can(permission){ return permission === 'data.write' ? !!membership.write_enabled : false; },
+    async profiles(ids){
+      const unique = Array.from(new Set(ids.filter(Boolean)));
+      if(!unique.length) return {};
+      const {data,error} = await supabaseClient.from('org_memberships').select('user_id,display_name')
+        .eq('org_id',membership.org_id).eq('active',true).in('user_id',unique);
+      if(error) throw error;
+      const out = {}; (data || []).forEach(p => { out[p.user_id] = {name:p.display_name || ''}; });
+      return out;
+    }
+  };
+}
+function makeDownloads(){
+  return { async save({filename,data}){
+    const blob = data instanceof Blob ? data : new Blob([data],{type:'application/octet-stream'});
+    const url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url),1000);
+  }};
+}
+function markLoaded(k){
+  state.loaded[k] = true;
+  if(!state.ready && ['rates','cats','ships','exps','reports'].every(x => state.loaded[x])){ state.ready = true; render(); }
+  else scheduleRender();
+}
+function subscribe(){
+  const db = state.db;
+  const onErr = e => {
+    console.error(e);
+    if(!state.ready) state.fatal = 'The database could not be loaded. Check project setup and account access, then reload.';
+    else state.error = 'Could not refresh data. Your last displayed data may be out of date.';
+    render();
+  };
+  db.doc('settings/rates').onSnapshot(s => {
+    const d = s.exists ? s.data() : {};
+    state.rates = Object.assign({},DEFAULTS,d);
+    state.rates.marginOptions = Array.isArray(d.marginOptions) && d.marginOptions.length ? d.marginOptions.slice() : DEFAULTS.marginOptions.slice();
+    state.rates.workDays = Array.isArray(d.workDays) && d.workDays.length ? d.workDays.slice() : DEFAULTS.workDays.slice();
+    markLoaded('rates');
+  },onErr);
+  db.doc('settings/categories').onSnapshot(s => {
+    const d = s.exists ? s.data() : null;
+    state.categories = d && Array.isArray(d.list) && d.list.length ? d.list.slice() : DEFAULT_CATS.slice();
+    markLoaded('cats');
+  },onErr);
+  db.collection('shipments').onSnapshot(s => { state.shipments = s.docs.map(d => Object.assign({id:d.id},d.data())); markLoaded('ships'); },onErr);
+  db.collection('expenses').onSnapshot(s => { state.expenses = s.docs.map(d => Object.assign({id:d.id},d.data())); markLoaded('exps'); },onErr);
+  db.collection('reports').onSnapshot(s => { const m={}; s.docs.forEach(d => {m[d.id]=d.data();}); state.reports=m; markLoaded('reports'); },onErr);
+  if(state.isAdmin){
+    db.collection('audit').orderBy('at','desc').limit(300).onSnapshot(s => {
+      state.audit=s.docs.map(d => Object.assign({id:d.id},d.data())); scheduleRender();
+    },onErr);
+  }
+}
+function resetSessionState(){
+  stopWatchers(); activeUserId=null;
+  state.ready=false; state.fatal=null; state.error=null; state.db=null; state.user=null; state.downloads=null; state.orgId=null;
+  state.me={id:null,name:''}; state.isAdmin=false; state.canWrite=false;
+  state.shipments=[]; state.expenses=[]; state.reports={}; state.audit=[]; state.names={}; state.loaded={};
+  state.rates=Object.assign({},DEFAULTS); state.categories=DEFAULT_CATS.slice(); state.tab='day';
+}
+async function loadSignedInUser(user){
+  if(!user || activeUserId === user.id) return;
+  resetSessionState(); activeUserId=user.id; render();
+  const {data:membership,error} = await supabaseClient.from('org_memberships')
+    .select('org_id,user_id,display_name,role,active,write_enabled')
+    .eq('user_id',user.id).eq('active',true).maybeSingle();
+  if(error || !membership){ activeUserId=user.id; showAuthGate(error ? error.message : '', 'access'); return; }
+  state.orgId=membership.org_id;
+  state.user=makeUserAdapter(user,membership);
+  state.db=createDatabaseAdapter(); state.downloads=makeDownloads();
+  state.me={id:user.id,name:membership.display_name || user.email || ''};
+  state.isAdmin=membership.role === 'admin';
+  state.canWrite=!!membership.write_enabled;
+  state.fatal=null; state.error=null;
+  subscribe();
+}
+async function signOut(){
+  if(supabaseClient) await supabaseClient.auth.signOut();
+  resetSessionState(); showAuthGate('');
+}
+document.addEventListener('submit',async e => {
+  const form=e.target;
+  if(!['loginForm','passwordResetForm','passwordUpdateForm'].includes(form.id)) return;
+  e.preventDefault();
+  if(form.id === 'loginForm'){
+    const button=$('#loginButton'), err=$('#loginError');
+    button.disabled=true; button.textContent='Signing in…'; err.hidden=true;
+    const email=form.elements.email.value.trim(), password=form.elements.password.value;
+    const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+    if(error){ err.textContent='Sign-in failed. Check your email/password or contact the administrator.'; err.hidden=false; button.disabled=false; button.textContent='Sign in'; return; }
+    await loadSignedInUser(data.user);
+  }else if(form.id === 'passwordResetForm'){
+    const button=$('#resetButton'), status=$('#resetStatus');
+    button.disabled=true; button.textContent='Sending…'; status.hidden=true;
+    const email=form.elements.email.value.trim();
+    const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});
+    status.textContent=error ? 'Could not send the reset email. Check the address and Supabase redirect settings.' : 'If the account exists, a reset link has been sent.';
+    status.hidden=false; button.disabled=false; button.textContent='Email reset link';
+  }else{
+    const button=$('#passwordUpdateButton'), err=$('#passwordUpdateError');
+    const password=form.elements.password.value, confirmation=form.elements.confirmPassword.value;
+    if(password.length < 10 || password !== confirmation){ err.textContent=password !== confirmation ? 'The passwords do not match.' : 'Use at least 10 characters.'; err.hidden=false; return; }
+    button.disabled=true; button.textContent='Saving…'; err.hidden=true;
+    const {data,error}=await supabaseClient.auth.updateUser({password});
+    if(error){ err.textContent='Could not update the password. Request a new reset link and try again.'; err.hidden=false; button.disabled=false; button.textContent='Save password'; return; }
+    history.replaceState({},document.title,window.location.pathname);
+    activeUserId=null;
+    await loadSignedInUser(data.user);
+  }
+});
+
+/* =====================================================================
+   START
+   ===================================================================== */
+async function init(){
+  render();
+  const cfg=window.APP_CONFIG || {};
+  if(!cfg.supabaseUrl || !cfg.supabaseUrl.startsWith('https://') || !cfg.supabasePublishableKey || cfg.supabasePublishableKey.includes('REPLACE_WITH')){
+    showSetupGate('Set the Supabase project URL and publishable key in config.js, then redeploy. Do not use a secret/service-role key in this file.'); return;
+  }
+  if(!window.supabase || typeof window.supabase.createClient !== 'function'){
+    showSetupGate('The Supabase browser library did not load. Refresh or check the CDN connection.'); return;
+  }
+  supabaseClient=window.supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey);
+  const {data,error}=await supabaseClient.auth.getSession();
+  if(error){ showSetupGate('Could not initialize sign-in. Check the Supabase Auth configuration.'); return; }
+  if(data.session && hasRecoveryLink()){ activeUserId=data.session.user.id; showPasswordUpdate(); }
+  else if(data.session) await loadSignedInUser(data.session.user); else showAuthGate('');
+  supabaseClient.auth.onAuthStateChange((event,session) => {
+    if(!session){ resetSessionState(); showAuthGate(''); }
+    else if(event === 'PASSWORD_RECOVERY'){ activeUserId=session.user.id; showPasswordUpdate(); }
+    else if(session.user.id !== activeUserId){ setTimeout(() => loadSignedInUser(session.user),0); }
+  });
+  document.addEventListener('visibilitychange',() => {
+    if(document.visibilityState === 'visible') liveRefreshers.forEach(refresh => refresh());
+  });
+}
+window.DHLApp = { Engine, state };
+init();
+})();
+</script>
+</body>
+</html>
