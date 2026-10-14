@@ -1008,10 +1008,10 @@ function showPasswordUpdate(){
     '<label class="fld"><span>Confirm password</span><input type="password" name="confirmPassword" autocomplete="new-password" minlength="10" required></label>' +
     '<p class="err" id="passwordUpdateError" hidden></p><button class="btn primary" type="submit" id="passwordUpdateButton">Save password</button></form></div>';
 }
-function hasRecoveryLink(){
+function getAuthLinkType(){
   const hash=new URLSearchParams((location.hash || '').replace(/^#/,''));
   const query=new URLSearchParams(location.search || '');
-  return hash.get('type') === 'recovery' || query.get('type') === 'recovery' || query.has('code');
+  return hash.get('type') || query.get('type') || (query.has('code') ? 'code' : '');
 }
 function showSetupGate(message){
   const view = $('#view');
@@ -1199,7 +1199,7 @@ document.addEventListener('submit',async e => {
     button.disabled=true; button.textContent='Sending…'; status.hidden=true;
     const email=form.elements.email.value.trim();
     const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});
-    status.textContent=error ? 'Could not send the reset email. Check the address and Supabase redirect settings.' : 'If the account exists, a reset link has been sent.';
+    status.textContent=error ? `Could not send reset email (${error.code || error.status || 'Auth error'}): ${error.message || 'Check Supabase Auth settings.'}` : 'If the account exists, a reset link has been sent.';
     status.hidden=false; button.disabled=false; button.textContent='Email reset link';
   }else{
     const button=$('#passwordUpdateButton'), err=$('#passwordUpdateError');
@@ -1219,6 +1219,9 @@ document.addEventListener('submit',async e => {
    ===================================================================== */
 async function init(){
   render();
+  // Supabase Auth may consume and clean the callback URL while initializing,
+  // so remember whether this was an invitation/recovery link first.
+  const initialAuthLinkType=getAuthLinkType();
   const cfg=window.APP_CONFIG || {};
   if(!cfg.supabaseUrl || !cfg.supabaseUrl.startsWith('https://') || !cfg.supabasePublishableKey || cfg.supabasePublishableKey.includes('REPLACE_WITH')){
     showSetupGate('Set the Supabase project URL and publishable key in config.js, then redeploy. Do not use a secret/service-role key in this file.'); return;
@@ -1229,8 +1232,14 @@ async function init(){
   supabaseClient=window.supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey);
   const {data,error}=await supabaseClient.auth.getSession();
   if(error){ showSetupGate('Could not initialize sign-in. Check the Supabase Auth configuration.'); return; }
-  if(data.session && hasRecoveryLink()){ activeUserId=data.session.user.id; showPasswordUpdate(); }
-  else if(data.session) await loadSignedInUser(data.session.user); else showAuthGate('');
+  if(data.session && ['invite','recovery'].includes(initialAuthLinkType)){
+    history.replaceState({},document.title,window.location.pathname);
+    activeUserId=data.session.user.id;
+    showPasswordUpdate();
+  }
+  else if(data.session) await loadSignedInUser(data.session.user);
+  else if(['invite','recovery'].includes(initialAuthLinkType)) showAuthGate('This email link may have expired or already been used. Request a fresh invitation or password-reset email.');
+  else showAuthGate('');
   supabaseClient.auth.onAuthStateChange((event,session) => {
     if(!session){ resetSessionState(); showAuthGate(''); }
     else if(event === 'PASSWORD_RECOVERY'){ activeUserId=session.user.id; showPasswordUpdate(); }
